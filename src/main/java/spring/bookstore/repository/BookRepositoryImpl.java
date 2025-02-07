@@ -1,4 +1,4 @@
-package spring.book_store.repository;
+package spring.bookstore.repository;
 
 import java.util.List;
 import org.hibernate.Session;
@@ -6,7 +6,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
-import spring.book_store.model.Book;
+import spring.bookstore.model.Book;
 
 @Repository
 public class BookRepositoryImpl implements BookRepository {

@@ -1,9 +1,9 @@
-package spring.book_store.service;
+package spring.bookstore.service;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import spring.book_store.model.Book;
-import spring.book_store.repository.BookRepository;
+import spring.bookstore.model.Book;
+import spring.bookstore.repository.BookRepository;
 
 @Service
 public class BookServiceImpl implements BookService {

@@ -1,4 +1,4 @@
-package spring.book_store;
+package spring.bookstore;
 
 import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,8 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import spring.book_store.model.Book;
-import spring.book_store.service.BookService;
+import spring.bookstore.model.Book;
+import spring.bookstore.service.BookService;
 
 @SpringBootApplication
 public class BookStoreApplication {

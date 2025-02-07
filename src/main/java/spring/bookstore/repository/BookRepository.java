@@ -1,7 +1,7 @@
-package spring.book_store.repository;
+package spring.bookstore.repository;
 
 import java.util.List;
-import spring.book_store.model.Book;
+import spring.bookstore.model.Book;
 
 public interface BookRepository {
     Book save(Book book);
