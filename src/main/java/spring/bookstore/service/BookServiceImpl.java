@@ -1,7 +1,6 @@
 package spring.bookstore.service;
 
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.bookstore.model.Book;

@@ -1,7 +1,6 @@
 package spring.bookstore.repository;
 
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
