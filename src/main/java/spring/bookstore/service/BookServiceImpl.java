@@ -1,17 +1,15 @@
-package spring.book_store.service;
+package spring.bookstore.service;
 
-import org.springframework.stereotype.Service;
-import spring.book_store.model.Book;
-import spring.book_store.repository.BookRepository;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import spring.bookstore.model.Book;
+import spring.bookstore.repository.BookRepository;
 
 @Service
+@RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
-
-    public BookServiceImpl(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
-    }
 
     @Override
     public Book save(Book book) {
