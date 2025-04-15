@@ -1,10 +1,7 @@
 package spring.bookstore.repository;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 import spring.bookstore.model.Book;
 
-public interface BookRepository {
-    Book save(Book book);
-
-    List<Book> findAll();
+public interface BookRepository extends JpaRepository<Book, Long> {
 }
