@@ -1,8 +1,14 @@
 package spring.bookstore.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +23,7 @@ import spring.bookstore.dto.BookDto;
 import spring.bookstore.dto.CreateBookRequestDto;
 import spring.bookstore.service.BookService;
 
+@Tag(name = "Book", description = "Operations with books")
 @RestController
 @RequestMapping("/books")
 @RequiredArgsConstructor
@@ -24,22 +31,31 @@ public class BookController {
 
     private final BookService bookService;
 
+    @Operation(summary = "Get all books", description = "Return all books")
+    @ApiResponse(responseCode = "200", description = "Books fetched successfully")
     @GetMapping
-    public List<BookDto> getAll() {
-        return bookService.getAll();
+    public Page<BookDto> getAll(@ParameterObject Pageable pageable) {
+        return bookService.getAll(pageable);
     }
 
+    @Operation(summary = "Get book by ID")
+    @ApiResponse(responseCode = "200", description = "Book found")
+    @ApiResponse(responseCode = "404", description = "Book not found", content = @Content)
     @GetMapping("/{id}")
     public BookDto getBookById(@PathVariable Long id) {
         return bookService.getBookById(id);
     }
 
+    @Operation(summary = "Update book by ID")
+    @ApiResponse(responseCode = "200", description = "Book updated successfully")
     @PutMapping("/{id}")
     public BookDto updateBook(@PathVariable Long id,
                               @RequestBody @Valid CreateBookRequestDto bookDto) {
         return bookService.updateBook(id, bookDto);
     }
 
+    @Operation(summary = "Create a new book")
+    @ApiResponse(responseCode = "201", description = "Book created successfully")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BookDto createBook(@RequestBody @Valid
@@ -47,6 +63,8 @@ public class BookController {
         return bookService.createBook(bookDto);
     }
 
+    @Operation(summary = "Delete book by ID (soft delete)")
+    @ApiResponse(responseCode = "204", description = "Book deleted successfully")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Long id) {
