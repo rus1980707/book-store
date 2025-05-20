@@ -3,21 +3,16 @@ package spring.bookstore.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Objects;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.beans.BeanWrapperImpl;
 
-@Getter
-@Setter
 public class FieldMatchValidator implements ConstraintValidator<FieldMatch, Object> {
-    private String firstFieldName;
-    private String secondFieldName;
     private String field;
     private String fieldMatch;
 
     @Override
     public void initialize(FieldMatch constraintAnnotation) {
-        this.firstFieldName = constraintAnnotation.first();
+        this.field = constraintAnnotation.fields()[0];
+        this.fieldMatch = constraintAnnotation.fields()[1];
     }
 
     @Override
