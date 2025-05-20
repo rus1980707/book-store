@@ -11,26 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 import spring.bookstore.dto.UserRegistrationRequestDto;
 import spring.bookstore.dto.UserResponseDto;
 import spring.bookstore.exception.RegistrationException;
-import spring.bookstore.mapper.UserMapper;
-import spring.bookstore.model.User;
-import spring.bookstore.repository.UserRepository;
+import spring.bookstore.service.UserService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
+    private final UserService userService;
 
     @PostMapping("/registration")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDto register(@RequestBody @Valid UserRegistrationRequestDto request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RegistrationException("Email is already registered");
-        }
-
-        User user = userMapper.toEntity(request);
-        return userMapper.toDto(userRepository.save(user));
+    public UserResponseDto register(@RequestBody @Valid UserRegistrationRequestDto request)
+            throws RegistrationException {
+        return userService.register(request);
     }
 }
