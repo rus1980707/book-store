@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-roles-and-admin
+      author: ruslan
+
+      changes:
+        # Insert roles
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_ADMIN
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_USER
+
+        # Insert admin user (password: admin123)
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: admin@bookstore.com
+              - column:
+                  name: password
+                  value: "$2a$10$Kkhj7pY5TfrQlhZuR0XczOF6NdN8oJhG5tOeTjRS0dxcHbLnu0gDi"
+              - column:
+                  name: first_name
+                  value: Admin
+              - column:
+                  name: last_name
+                  value: User
+              - column:
+                  name: shipping_address
+                  value: "Default admin address"
+
+        # Assign ADMIN role to admin user
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  valueComputed: "(SELECT id FROM users WHERE email = 'admin@bookstore.com')"
+              - column:
+                  name: role_id
+                  valueComputed: "(SELECT id FROM roles WHERE name = 'ROLE_ADMIN')"
