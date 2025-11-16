@@ -1,5 +1,7 @@
 package spring.bookstore.service;
 
+import jakarta.transaction.Transactional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import spring.bookstore.model.User;
 import spring.bookstore.repository.UserRepository;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -30,6 +33,7 @@ public class UserServiceImpl implements UserService {
         Role userRole = new Role();
         userRole.setName(Role.RoleName.ROLE_USER);
         user.getRoles().add(userRole);
+        user.setRoles(Set.of(userRole));
         userRepository.save(user);
         return userMapper.toDto(userRepository.save(user));
     }
