@@ -11,6 +11,7 @@ import spring.bookstore.exception.RegistrationException;
 import spring.bookstore.mapper.UserMapper;
 import spring.bookstore.model.Role;
 import spring.bookstore.model.User;
+import spring.bookstore.repository.RoleRepository;
 import spring.bookstore.repository.UserRepository;
 
 @Service
@@ -18,6 +19,7 @@ import spring.bookstore.repository.UserRepository;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -30,11 +32,10 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        Role userRole = new Role();
-        userRole.setName(Role.RoleName.ROLE_USER);
-        user.getRoles().add(userRole);
-        user.setRoles(Set.of(userRole));
+        Role role = roleRepository.findByName(Role.RoleName.ROLE_USER)
+                .orElseThrow(() -> new RegistrationException("Role User not found"));
+        user.setRoles(Set.of(role));
         userRepository.save(user);
-        return userMapper.toDto(userRepository.save(user));
+        return userMapper.toDto(user);
     }
 }
