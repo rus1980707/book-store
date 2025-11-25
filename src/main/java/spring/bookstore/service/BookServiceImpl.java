@@ -2,8 +2,11 @@ package spring.bookstore.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import spring.bookstore.dto.BookDto;
+import spring.bookstore.dto.BookDtoWithoutCategoryIds;
 import spring.bookstore.dto.CreateBookRequestDto;
 import spring.bookstore.exception.EntityNotFoundException;
 import spring.bookstore.mapper.BookMapper;
@@ -53,4 +56,11 @@ public class BookServiceImpl implements BookService {
     public void deleteById(long id) {
         bookRepository.deleteById(id);
     }
+
+    @Override
+    public Page<BookDtoWithoutCategoryIds> findAllByCategoryId(Long id, Pageable pageable) {
+        return bookRepository.findAllByCategories_Id(id, pageable)
+                .map(bookMapper::toDtoWithoutCategories);
+    }
+
 }

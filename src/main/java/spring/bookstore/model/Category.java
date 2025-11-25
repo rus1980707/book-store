@@ -10,11 +10,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -22,9 +19,6 @@ import lombok.ToString;
 @Table(name = "categories")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Category {
 
     @Id
@@ -41,6 +35,6 @@ public class Category {
     @EqualsAndHashCode.Exclude
     private Set<Book> books = new HashSet<>();
 
-    @Column(name = "deleted", nullable = false)
-    private Boolean deleted = false;
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
 }
