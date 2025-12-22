@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/changes/004-create-categories-table.yaml
   - include:
       file: db/changelog/changes/005-create-books-categories-table.yaml
+  - include:
+      file: db/changelog/changes/006-create-shopping-carts-table.yaml
+  - include:
+      file: db/changelog/changes/007-create-cart-items-table.yaml

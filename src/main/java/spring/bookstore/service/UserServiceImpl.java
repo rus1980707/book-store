@@ -10,8 +10,10 @@ import spring.bookstore.dto.UserResponseDto;
 import spring.bookstore.exception.RegistrationException;
 import spring.bookstore.mapper.UserMapper;
 import spring.bookstore.model.Role;
+import spring.bookstore.model.ShoppingCart;
 import spring.bookstore.model.User;
 import spring.bookstore.repository.RoleRepository;
+import spring.bookstore.repository.ShoppingCartRepository;
 import spring.bookstore.repository.UserRepository;
 
 @Service
@@ -22,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ShoppingCartRepository shoppingCartRepository;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto request)
@@ -35,7 +38,10 @@ public class UserServiceImpl implements UserService {
         Role role = roleRepository.findByName(Role.RoleName.ROLE_USER)
                 .orElseThrow(() -> new RegistrationException("Role User not found"));
         user.setRoles(Set.of(role));
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        ShoppingCart cart = new ShoppingCart();
+        cart.setUser(savedUser);
+        shoppingCartRepository.save(cart);
         return userMapper.toDto(user);
     }
 }
