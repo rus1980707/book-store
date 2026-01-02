@@ -3,6 +3,7 @@ package spring.bookstore.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,8 +31,16 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**")
+                        .requestMatchers("/api/auth/register",
+                                "/api/auth/login","/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+
+                        .requestMatchers("/api/cart/**",
+                                "/api/books/**", "/api/categories/**").hasRole("User")
+
+                        .requestMatchers(HttpMethod.POST,"/api/books/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,"/api/books/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,"/api/books/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

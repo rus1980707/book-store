@@ -22,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ShoppingCartService shoppingCartService;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto request)
@@ -35,7 +36,8 @@ public class UserServiceImpl implements UserService {
         Role role = roleRepository.findByName(Role.RoleName.ROLE_USER)
                 .orElseThrow(() -> new RegistrationException("Role User not found"));
         user.setRoles(Set.of(role));
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        shoppingCartService.createCartForUser(savedUser);
         return userMapper.toDto(user);
     }
 }
