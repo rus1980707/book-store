@@ -4,5 +4,5 @@
 2. Fill environment variables in `.env`
 3. Build and run containers:
 
-```bash
+```bash  
 docker-compose up --build
