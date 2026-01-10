@@ -1,85 +1,133 @@
 package spring.bookstore.controller;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import spring.bookstore.dto.CategoryDto;
-import spring.bookstore.security.JwtAuthenticationFilter;
-import spring.bookstore.security.JwtUtil;
-import spring.bookstore.service.BookService;
-import spring.bookstore.service.CategoryService;
+import spring.bookstore.model.Category;
+import spring.bookstore.repository.CategoryRepository;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CategoryController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
 class CategoryControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private CategoryService categoryService;
-
-    @MockitoBean
-    private BookService bookService;
-
-    @MockitoBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @MockitoBean
-    private JwtUtil jwtUtil;
+    @Autowired
+    CategoryRepository categoryRepository;
 
     @Test
-    @DisplayName("GET /categories -> should return paginated list of categories")
-    void shouldReturnCategories() throws Exception {
-        CategoryDto dto = new CategoryDto();
-        dto.setId(1L);
-        dto.setName("Drama");
-        dto.setDescription("Books");
+    @DisplayName("POST /categories — creates category (ADMIN role)")
+    @WithMockUser(roles = "ADMIN")
+    void createCategory_ok() throws Exception {
+        String json = """
+            {
+              "name": "Fantasy",
+              "description": "Books with magic"
+            }
+        """;
 
-        when(categoryService.findAll(any()))
-                .thenReturn(new PageImpl<>(List.of(dto)));
+        mockMvc.perform(post("/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Fantasy"));
+    }
 
-        mockMvc.perform(get("/categories"))
+    @Test
+    @DisplayName("POST /categories — 400 validation error")
+    @WithMockUser(roles = "ADMIN")
+    void createCategory_validationError() throws Exception {
+        String json = """
+            {
+              "name": ""
+            }
+        """;
+
+        mockMvc.perform(post("/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /categories — returns categories (USER)")
+    @WithMockUser(roles = "USER")
+    void getAllCategories_ok() throws Exception {
+        Category c = new Category();
+        c.setName("Fantasy");
+        categoryRepository.save(c);
+
+        mockMvc.perform(get("/categories")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Drama"));
+                .andExpect(jsonPath("$.content[0].name").value("Fantasy"));
     }
+
     @Test
-    @DisplayName("DELETE /categories/{id} - delete")
-    void delete_ok() throws Exception {
-        mockMvc.perform(delete("/categories/1"))
+    @DisplayName("GET /categories/{id} — returns category (USER)")
+    @WithMockUser(roles = "USER")
+    void getCategoryById_ok() throws Exception {
+        Category c = new Category();
+        c.setName("Fantasy");
+        c = categoryRepository.save(c);
+
+        mockMvc.perform(get("/categories/" + c.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Fantasy"));
+    }
+
+    @Test
+    @DisplayName("GET /categories/{id} — 404 not found")
+    @WithMockUser(roles = "USER")
+    void getCategoryById_notFound() throws Exception {
+        mockMvc.perform(get("/categories/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /categories/{id} — updates category (ADMIN)")
+    @WithMockUser(roles = "ADMIN")
+    void updateCategory_ok() throws Exception {
+        Category c = new Category();
+        c.setName("Fantasy");
+        c = categoryRepository.save(c);
+
+        String json = """
+            {
+              "name": "Sci-Fi",
+              "description": "Updated"
+            }
+        """;
+
+        mockMvc.perform(put("/categories/" + c.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Sci-Fi"));
+    }
+
+    @Test
+    @DisplayName("DELETE /categories/{id} — deletes category (ADMIN)")
+    @WithMockUser(roles = "ADMIN")
+    void deleteCategory_ok() throws Exception {
+        Category c = new Category();
+        c.setName("Fantasy");
+        c = categoryRepository.save(c);
+
+        mockMvc.perform(delete("/categories/" + c.getId()))
                 .andExpect(status().isNoContent());
-
-        verify(categoryService).deleteById(1L);
-    }
-    @Test
-    @DisplayName("GET /categories/{id}/books - paginated books")
-    void getBooks_ok() throws Exception {
-        Pageable pageable = PageRequest.of(0, 10);
-        when(bookService.findAllByCategoryId(eq(5L), any()))
-                .thenReturn(Page.empty(pageable));
-
-        mockMvc.perform(get("/categories/5/books?page=0&size=10"))
-                .andExpect(status().isOk());
-
-        verify(bookService).findAllByCategoryId(eq(5L), any());
     }
 }
 

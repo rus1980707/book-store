@@ -1,11 +1,12 @@
 package spring.bookstore.repository;
 
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 import spring.bookstore.model.Category;
 
@@ -22,27 +23,46 @@ class CategoryRepositoryTest {
     private CategoryRepository categoryRepository;
 
     @Test
-    @DisplayName("Given new Category, When save, Then it is persisted with generated ID")
-    void shouldSaveCategory() {
+    @DisplayName("save() — should save category")
+    void save_ok() {
         Category category = new Category();
-        category.setName("Fiction");
+        category.setName("Drama");
         category.setDescription("Books");
 
         Category saved = categoryRepository.save(category);
 
         assertNotNull(saved.getId());
-        assertEquals("Fiction", saved.getName());
+        assertEquals("Drama", saved.getName());
     }
 
     @Test
-    @DisplayName("Given saved Category, When findById, Then return Optional with Category")
-    void shouldFindCategoryById() {
-        Category category = new Category();
-        category.setName("Science");
-        categoryRepository.save(category);
+    @DisplayName("findAllByIsDeletedFalse — should return only active categories")
+    void findAllByIsDeletedFalse_ok() {
+        Category active = new Category();
+        active.setName("Sci-fi");
+        active.setDeleted(false);
+        categoryRepository.save(active);
 
-        Optional<Category> found = categoryRepository.findById(category.getId());
+        Category deleted = new Category();
+        deleted.setName("Trash");
+        deleted.setDeleted(true);
+        categoryRepository.save(deleted);
 
-        assertTrue(found.isPresent());
+        Page<Category> result = categoryRepository.findAllByIsDeletedFalse(PageRequest.of(0, 10));
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Sci-fi", result.getContent().get(0).getName());
+    }
+
+    @Test
+    @DisplayName("delete() — should delete category")
+    void delete_ok() {
+        Category cat = new Category();
+        cat.setName("Fantasy");
+        Category saved = categoryRepository.save(cat);
+
+        categoryRepository.deleteById(saved.getId());
+
+        assertTrue(categoryRepository.findById(saved.getId()).isEmpty());
     }
 }

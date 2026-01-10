@@ -38,16 +38,18 @@ class BookServiceTest {
         book.setId(1L);
         book.setTitle("Dune");
 
-        BookDto dto = new BookDto();
-        dto.setId(1L);
-        dto.setTitle("Dune");
+        BookDto expected = new BookDto();
+        expected.setId(1L);
+        expected.setTitle("Dune");
 
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
-        when(bookMapper.toDto(book)).thenReturn(dto);
+        when(bookMapper.toDto(book)).thenReturn(expected);
 
-        BookDto result = bookService.getBookById(1L);
+        BookDto actual = bookService.getBookById(1L);
 
-        assertEquals("Dune", result.getTitle());
+        assertEquals(expected, actual);
+        verify(bookRepository).findById(1L);
+        verify(bookMapper).toDto(book);
     }
 
     @Test
@@ -57,7 +59,35 @@ class BookServiceTest {
 
         assertThrows(EntityNotFoundException.class,
                 () -> bookService.getBookById(99L));
+        verify(bookRepository).findById(99L);
     }
+
+    @Test
+    @DisplayName("createBook — saves and returns DTO")
+    void createBook_ok() {
+        CreateBookRequestDto req = new CreateBookRequestDto();
+        req.setTitle("Clean Code");
+
+        Book saved = new Book();
+        saved.setId(1L);
+        saved.setTitle("Clean Code");
+
+        BookDto expected = new BookDto();
+        expected.setId(1L);
+        expected.setTitle("Clean Code");
+
+        when(bookMapper.toEntity(req)).thenReturn(saved);
+        when(bookRepository.save(saved)).thenReturn(saved);
+        when(bookMapper.toDto(saved)).thenReturn(expected);
+
+        BookDto actual = bookService.createBook(req);
+
+        assertEquals(expected, actual);
+        verify(bookMapper).toEntity(req);
+        verify(bookRepository).save(saved);
+        verify(bookMapper).toDto(saved);
+    }
+
     @Test
     @DisplayName("updateBook — updates when exists")
     void updateBook_ok() {
@@ -67,18 +97,18 @@ class BookServiceTest {
         Book existing = new Book();
         existing.setId(1L);
 
-        BookDto dto = new BookDto();
-        dto.setId(1L);
-        dto.setTitle("Dune");
+        BookDto expected = new BookDto();
+        expected.setId(1L);
+        expected.setTitle("Dune");
 
         when(bookRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(bookMapper.toDto(existing)).thenReturn(dto);
+        when(bookMapper.toDto(existing)).thenReturn(expected);
 
-        BookDto result = bookService.updateBook(1L, req);
+        BookDto actual = bookService.updateBook(1L, req);
 
         verify(bookMapper).updateBookDto(req, existing);
         verify(bookRepository).save(existing);
-        assertEquals("Dune", result.getTitle());
+        assertEquals("Dune", actual.getTitle());
     }
 
     @Test

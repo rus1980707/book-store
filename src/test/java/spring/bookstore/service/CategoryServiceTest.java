@@ -9,13 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spring.bookstore.dto.CategoryDto;
 import spring.bookstore.dto.CategoryRequestDto;
-import spring.bookstore.exception.EntityNotFoundException;
 import spring.bookstore.mapper.CategoryMapper;
 import spring.bookstore.model.Category;
 import spring.bookstore.repository.CategoryRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,39 +30,28 @@ class CategoryServiceTest {
     private CategoryServiceImpl categoryService;
 
     @Test
-    @DisplayName("getById(): return CategoryDto when Category exist")
-    void getById_existingCategory_returnsDto() {
-        Category category = new Category();
-        category.setId(1L);
-        category.setName("Drama");
+    @DisplayName("getById — returns DTO")
+    void getById_ok() {
+        Category entity = new Category();
+        entity.setId(1L);
+        entity.setName("Drama");
 
-        CategoryDto dto = new CategoryDto();
-        dto.setId(1L);
-        dto.setName("Drama");
+        CategoryDto expected = new CategoryDto();
+        expected.setId(1L);
+        expected.setName("Drama");
 
-        when(categoryRepository.findById(1L))
-                .thenReturn(Optional.of(category));
-        when(categoryMapper.toDto(category))
-                .thenReturn(dto);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(categoryMapper.toDto(entity)).thenReturn(expected);
 
-        CategoryDto result = categoryService.getById(1L);
+        CategoryDto actual = categoryService.getById(1L);
 
-        assertEquals("Drama", result.getName());
-    }
-
-    @Test
-    @DisplayName("getById(): throw EntityNotFoundException when Category not exist")
-    void getById_notExistingCategory_throwsException() {
-        when(categoryRepository.findById(1L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class,
-                () -> categoryService.getById(1L));
+        assertEquals(expected, actual);
+        verify(categoryRepository).findById(1L);
     }
 
     @Test
     @DisplayName("deleteById(): deleted Category when exist")
-    void deleteById_existingCategory_deletes() {
+    void deleteById_ok() {
 
         when(categoryRepository.existsById(1L))
                 .thenReturn(true);
@@ -77,15 +64,24 @@ class CategoryServiceTest {
     @DisplayName("createCategory — saves and returns DTO")
     void create_ok() {
         CategoryRequestDto requestDto = new CategoryRequestDto();
+        requestDto.setName("Fantasy");
+
         Category entity = new Category();
-        entity.setName("Sci-Fi");
-        CategoryDto dto = new CategoryDto();
+        entity.setName("Fantasy");
+
+        CategoryDto expected = new CategoryDto();
+        expected.setId(1L);
+        expected.setName("Fantasy");
 
         when(categoryMapper.toEntity(requestDto)).thenReturn(entity);
         when(categoryRepository.save(entity)).thenReturn(entity);
-        when(categoryMapper.toDto(entity)).thenReturn(dto);
+        when(categoryMapper.toDto(entity)).thenReturn(expected);
 
-        CategoryDto result = categoryService.save(requestDto);
+        CategoryDto actual = categoryService.save(requestDto);
 
+        assertEquals(expected, actual);
+        verify(categoryMapper).toEntity(requestDto);
+        verify(categoryRepository).save(entity);
+        verify(categoryMapper).toDto(entity);
     }
 }
