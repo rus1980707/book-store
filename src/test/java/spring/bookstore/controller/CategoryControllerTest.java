@@ -18,8 +18,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.liquibase.enabled=false")
-@AutoConfigureMockMvc
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
 @Transactional
 @ImportAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
 class CategoryControllerTest {
