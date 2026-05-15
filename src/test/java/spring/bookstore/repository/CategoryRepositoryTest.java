@@ -3,17 +3,14 @@ package spring.bookstore.repository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import spring.bookstore.AbstractIntegrationTest;
 import spring.bookstore.model.Category;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-class CategoryRepositoryTest {
+class CategoryRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired
     private CategoryRepository categoryRepository;

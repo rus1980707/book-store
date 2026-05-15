@@ -1,87 +1,62 @@
 package spring.bookstore.service;
 
-import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import spring.bookstore.AbstractIntegrationTest;
 import spring.bookstore.dto.CategoryDto;
 import spring.bookstore.dto.CategoryRequestDto;
-import spring.bookstore.mapper.CategoryMapper;
 import spring.bookstore.model.Category;
 import spring.bookstore.repository.CategoryRepository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+class CategoryServiceTest extends AbstractIntegrationTest {
+    @Autowired
+    private CategoryService categoryService;
 
-@ExtendWith(MockitoExtension.class)
-class CategoryServiceTest {
-
-    @Mock
+    @Autowired
     private CategoryRepository categoryRepository;
 
-    @Mock
-    private CategoryMapper categoryMapper;
-
-    @InjectMocks
-    private CategoryServiceImpl categoryService;
-
     @Test
-    @DisplayName("getById — returns DTO")
+    @DisplayName("getById returns DTO")
     void getById_ok() {
-        Category entity = new Category();
-        entity.setId(1L);
-        entity.setName("Drama");
+        Category saved = categoryRepository.save(category("Drama"));
 
-        CategoryDto expected = new CategoryDto();
-        expected.setId(1L);
-        expected.setName("Drama");
+        CategoryDto actual = categoryService.getById(saved.getId());
 
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(categoryMapper.toDto(entity)).thenReturn(expected);
-
-        CategoryDto actual = categoryService.getById(1L);
-
-        assertEquals(expected, actual);
-        verify(categoryRepository).findById(1L);
+        assertEquals(saved.getId(), actual.getId());
+        assertEquals("Drama", actual.getName());
     }
 
     @Test
-    @DisplayName("deleteById(): deleted Category when exist")
+    @DisplayName("deleteById deletes category when exists")
     void deleteById_ok() {
+        Category saved = categoryRepository.save(category("Fantasy"));
 
-        when(categoryRepository.existsById(1L))
-                .thenReturn(true);
+        categoryService.deleteById(saved.getId());
 
-        categoryService.deleteById(1L);
-
-        verify(categoryRepository).deleteById(1L);
+        assertFalse(categoryRepository.existsById(saved.getId()));
     }
+
     @Test
-    @DisplayName("createCategory — saves and returns DTO")
+    @DisplayName("createCategory saves and returns DTO")
     void create_ok() {
-        CategoryRequestDto requestDto = new CategoryRequestDto();
-        requestDto.setName("Fantasy");
+        CategoryRequestDto request = new CategoryRequestDto();
+        request.setName("Fantasy");
+        request.setDescription("Books");
 
-        Category entity = new Category();
-        entity.setName("Fantasy");
+        CategoryDto actual = categoryService.save(request);
 
-        CategoryDto expected = new CategoryDto();
-        expected.setId(1L);
-        expected.setName("Fantasy");
+        assertNotNull(actual.getId());
+        assertEquals("Fantasy", actual.getName());
+    }
 
-        when(categoryMapper.toEntity(requestDto)).thenReturn(entity);
-        when(categoryRepository.save(entity)).thenReturn(entity);
-        when(categoryMapper.toDto(entity)).thenReturn(expected);
-
-        CategoryDto actual = categoryService.save(requestDto);
-
-        assertEquals(expected, actual);
-        verify(categoryMapper).toEntity(requestDto);
-        verify(categoryRepository).save(entity);
-        verify(categoryMapper).toDto(entity);
+    private Category category(String name) {
+        Category category = new Category();
+        category.setName(name);
+        return category;
     }
 }

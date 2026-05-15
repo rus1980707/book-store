@@ -1,120 +1,120 @@
 package spring.bookstore.service;
 
-import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import spring.bookstore.AbstractIntegrationTest;
 import spring.bookstore.dto.BookDto;
 import spring.bookstore.dto.CreateBookRequestDto;
 import spring.bookstore.exception.EntityNotFoundException;
-import spring.bookstore.mapper.BookMapper;
 import spring.bookstore.model.Book;
+import spring.bookstore.model.Category;
 import spring.bookstore.repository.BookRepository;
+import spring.bookstore.repository.CategoryRepository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+class BookServiceTest extends AbstractIntegrationTest {
+    @Autowired
+    private BookService bookService;
 
-@ExtendWith(MockitoExtension.class)
-class BookServiceTest {
-
-    @Mock
+    @Autowired
     private BookRepository bookRepository;
 
-    @Mock
-    private BookMapper bookMapper;
-
-    @InjectMocks
-    private BookServiceImpl bookService;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Test
-    @DisplayName("getBookById — returns DTO if found")
+    @DisplayName("getBookById returns DTO if found")
     void getBookById_ok() {
-        Book book = new Book();
-        book.setId(1L);
-        book.setTitle("Dune");
+        Book saved = bookRepository.save(book("Dune", "Frank Herbert", "1234567890"));
 
-        BookDto expected = new BookDto();
-        expected.setId(1L);
-        expected.setTitle("Dune");
+        BookDto actual = bookService.getBookById(saved.getId());
 
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
-        when(bookMapper.toDto(book)).thenReturn(expected);
-
-        BookDto actual = bookService.getBookById(1L);
-
-        assertEquals(expected, actual);
-        verify(bookRepository).findById(1L);
-        verify(bookMapper).toDto(book);
-    }
-
-    @Test
-    @DisplayName("getBookById — throws EntityNotFoundException when not found")
-    void getBookById_notFound() {
-        when(bookRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class,
-                () -> bookService.getBookById(99L));
-        verify(bookRepository).findById(99L);
-    }
-
-    @Test
-    @DisplayName("createBook — saves and returns DTO")
-    void createBook_ok() {
-        CreateBookRequestDto req = new CreateBookRequestDto();
-        req.setTitle("Clean Code");
-
-        Book saved = new Book();
-        saved.setId(1L);
-        saved.setTitle("Clean Code");
-
-        BookDto expected = new BookDto();
-        expected.setId(1L);
-        expected.setTitle("Clean Code");
-
-        when(bookMapper.toEntity(req)).thenReturn(saved);
-        when(bookRepository.save(saved)).thenReturn(saved);
-        when(bookMapper.toDto(saved)).thenReturn(expected);
-
-        BookDto actual = bookService.createBook(req);
-
-        assertEquals(expected, actual);
-        verify(bookMapper).toEntity(req);
-        verify(bookRepository).save(saved);
-        verify(bookMapper).toDto(saved);
-    }
-
-    @Test
-    @DisplayName("updateBook — updates when exists")
-    void updateBook_ok() {
-        CreateBookRequestDto req = new CreateBookRequestDto();
-        req.setTitle("Dune");
-
-        Book existing = new Book();
-        existing.setId(1L);
-
-        BookDto expected = new BookDto();
-        expected.setId(1L);
-        expected.setTitle("Dune");
-
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(bookMapper.toDto(existing)).thenReturn(expected);
-
-        BookDto actual = bookService.updateBook(1L, req);
-
-        verify(bookMapper).updateBookDto(req, existing);
-        verify(bookRepository).save(existing);
+        assertEquals(saved.getId(), actual.getId());
         assertEquals("Dune", actual.getTitle());
     }
 
     @Test
-    @DisplayName("deleteBook — calls repository delete")
+    @DisplayName("getBookById throws EntityNotFoundException when not found")
+    void getBookById_notFound() {
+        assertThrows(EntityNotFoundException.class, () -> bookService.getBookById(99L));
+    }
+
+    @Test
+    @DisplayName("createBook saves and returns DTO")
+    void createBook_ok() {
+        Category category = categoryRepository.save(category("Programming"));
+        CreateBookRequestDto request = bookRequest(
+                "Clean Code",
+                "Robert Martin",
+                "9780132350884",
+                List.of(category.getId())
+        );
+
+        BookDto actual = bookService.createBook(request);
+
+        assertNotNull(actual.getId());
+        assertEquals("Clean Code", actual.getTitle());
+        assertFalse(bookRepository.findById(actual.getId()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("updateBook updates existing book")
+    void updateBook_ok() {
+        Book saved = bookRepository.save(book("Old Title", "Someone", "ABC"));
+        Category category = categoryRepository.save(category("Updated category"));
+        CreateBookRequestDto request = bookRequest(
+                "New Title",
+                "Someone",
+                "ABC",
+                List.of(category.getId())
+        );
+
+        BookDto actual = bookService.updateBook(saved.getId(), request);
+
+        assertEquals(saved.getId(), actual.getId());
+        assertEquals("New Title", actual.getTitle());
+    }
+
+    @Test
+    @DisplayName("deleteBook deletes existing book")
     void delete_ok() {
-        bookService.deleteById(5L);
-        verify(bookRepository).deleteById(5L);
+        Book saved = bookRepository.save(book("Refactoring", "Fowler", "333"));
+
+        bookService.deleteById(saved.getId());
+
+        assertFalse(bookRepository.existsById(saved.getId()));
+    }
+
+    private Book book(String title, String author, String isbn) {
+        Book book = new Book();
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setIsbn(isbn);
+        book.setPrice(BigDecimal.ONE);
+        return book;
+    }
+
+    private Category category(String name) {
+        Category category = new Category();
+        category.setName(name);
+        return category;
+    }
+
+    private CreateBookRequestDto bookRequest(String title, String author, String isbn,
+                                             List<Long> categoryIds) {
+        CreateBookRequestDto request = new CreateBookRequestDto();
+        request.setTitle(title);
+        request.setAuthor(author);
+        request.setIsbn(isbn);
+        request.setPrice(BigDecimal.TEN);
+        request.setCategoryIds(categoryIds);
+        return request;
     }
 }

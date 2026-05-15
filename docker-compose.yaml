@@ -1,8 +1,7 @@
-version: "3.8"
 
 services:
   mysqldb:
-    image: mysql:8.0
+    image: mysql:8.0.45
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -20,7 +19,8 @@ services:
 
   app:
     depends_on:
-      - mysqldb
+       mysqldb:
+         condition: service_healthy
     restart: on-failure
     build: .
     env_file: ./.env
